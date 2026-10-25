@@ -307,6 +307,7 @@ public:
       m_tb.time_limit = time_limit;
       m_tb.trailing_activation = trailing_activation;
       m_tb.trailing_delta = trailing_delta;
+      HbEnforceRewardRisk(m_tb.stop_loss, m_tb.take_profit, m_tb.trailing_activation, m_tb.trailing_delta);
       m_tb.open_order_type = HB_ORDER_MARKET;   // taker controller
       m_tb.take_profit_order_type = tp_order_type;
      }
@@ -451,6 +452,7 @@ public:
       m_tb.time_limit = time_limit;
       m_tb.trailing_activation = trailing_activation;
       m_tb.trailing_delta = trailing_delta;
+      HbEnforceRewardRisk(m_tb.stop_loss, m_tb.take_profit, m_tb.trailing_activation, m_tb.trailing_delta);
       m_tb.open_order_type = HB_ORDER_LIMIT;    // maker controller
       m_tb.take_profit_order_type = tp_order_type;
       return true;

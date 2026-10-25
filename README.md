@@ -32,11 +32,26 @@ All of them run on the same engine in `MQL5/Include/Hummingbot`:
 - **Controllers**: the directional and market-making controller bases, with max executors per side, cooldowns,
   level refreshes and stop-loss cooldowns.
 
-Default inputs match Hummingbot's defaults, and auto-tune fits them to whatever symbol the EA runs on.
+Default inputs match Hummingbot's defaults except for stop losses (see risk to reward), and auto-tune fits them to whatever symbol the EA runs on.
+
+## Risk to reward (1:2 or better)
+
+`Min reward:risk` (default 2) makes every take profit at least twice the stop loss. If you enter a smaller take
+profit, it is raised to 2 x the stop loss. A trailing stop never locks in less than that either: its activation is
+raised so that activation minus delta is at least 2 x the stop loss. Set it to 0 to use Hummingbot's own targets.
+
+The defaults were changed to match: stop loss 1% and take profit 2% (Hummingbot uses 3% and 2%). DMan V3 gets a 2%
+take profit and a 2.5% / 0.5% trailing stop, and Stat Arb closes the pair at -0.5% / +1%. Auto-tune scales stop
+and target by the same factor, so the ratio holds on every symbol.
+
+Exits that are not the take profit can still be smaller than 2R: the time limit (45 minutes by default) and a
+market-making order refresh close at the market price. Grids have no per-trade stop (each level has a take profit,
+and the whole grid has a stop-out price), and Avellaneda has no stop loss or take profit, so the rule doesn't apply
+to them.
 
 ## Auto-tune for every symbol
 
-Hummingbot's defaults (2–3% stops, 1–2% spreads) were written for crypto pairs that move about 5% a day. On a
+Hummingbot's defaults (1–3% targets, 1–2% spreads) were written for crypto pairs that move about 5% a day. On a
 forex pair that moves 0.6% a day they would almost never trigger. Every EA therefore measures its symbol when it
 starts and scales the percentage settings to it, so the same defaults work on any forex pair, metal, index, crypto
 CFD or synthetic index without a per-symbol preset.
@@ -57,11 +72,11 @@ Rough effect on `HB_PMM_Simple` (stop loss / take profit / first spread) with ty
 
 | Symbol | Daily range | Factor | Stop loss | Take profit | Spread |
 |---|---|---|---|---|---|
-| Hummingbot crypto | 5% | 1.00 | 3% | 2% | 1% |
-| BTCUSD | ~3% | ~0.60 | 1.8% | 1.2% | 0.6% |
-| XAUUSD | ~1.5% | ~0.30 | 0.9% | 0.6% | 0.3% |
-| NAS100 | ~1.3% | ~0.26 | 0.78% | 0.52% | 0.26% |
-| EURUSD | ~0.6% | ~0.12 | 0.36% | 0.24% | 0.12% |
+| Defaults as entered | 5% | 1.00 | 1% | 2% | 1% |
+| BTCUSD | ~3% | ~0.60 | 0.6% | 1.2% | 0.6% |
+| XAUUSD | ~1.5% | ~0.30 | 0.3% | 0.6% | 0.3% |
+| NAS100 | ~1.3% | ~0.26 | 0.26% | 0.52% | 0.26% |
+| EURUSD | ~0.6% | ~0.12 | 0.12% | 0.24% | 0.12% |
 
 The real numbers come from your broker's prices at start-up. What is not scaled: lot sizes, time limits, cooldowns,
 indicator lengths and thresholds (%B, z-score), and settings that already follow volatility (PMM Dynamic's NATR

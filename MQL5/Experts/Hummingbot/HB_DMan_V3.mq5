@@ -8,7 +8,7 @@
 #property description "Optionally scales the ladder spreads and the stops by the Bollinger bandwidth."
 
 #define HB_DEFAULT_MAGIC 710104
-#define HB_DEF_TRAILING_ACTIVATION 0.015
+#define HB_DEF_TRAILING_ACTIVATION 0.025
 #define HB_DEF_TRAILING_DELTA 0.005
 #include <Hummingbot\CommonInputs.mqh>
 #include <Hummingbot\Controllers.mqh>
@@ -75,15 +75,17 @@ protected:
          prices[i] = side == HB_BUY ? price * (1.0 - m_spreads[i] * mult) : price * (1.0 + m_spreads[i] * mult);
          level_lots[i] = lots * m_weights[i] / total_w;
         }
-      double sl = m_tb.stop_loss, act = m_tb.trailing_activation, delta = m_tb.trailing_delta;
+      double sl = m_tb.stop_loss, tp = m_tb.take_profit, act = m_tb.trailing_activation, delta = m_tb.trailing_delta;
       if(InpDynamicTarget)
         {
          sl *= mult;
+         tp *= mult;
          act *= mult;
          delta *= mult;
         }
       CHbDCAExecutor *e = new CHbDCAExecutor();
-      e.Setup(m_symbol, side, prices, level_lots, 0.0, sl, act, delta, m_tb.time_limit, HbTune(InpActivationBounds), "dman_v3");
+      HbEnforceRewardRisk(sl, tp, act, delta);
+      e.Setup(m_symbol, side, prices, level_lots, tp, sl, act, delta, m_tb.time_limit, HbTune(InpActivationBounds), "dman_v3");
       return e;
      }
 

@@ -79,6 +79,22 @@ struct HbTripleBarrier
    bool              HasTrailing(void) const { return trailing_activation > 0 && trailing_delta > 0; }
   };
 
+double g_hb_min_rr = 0.0;  // minimum reward:risk, 0 = off
+
+// Raises the take profit, and the profit a trailing stop locks in, to at least g_hb_min_rr times the stop loss.
+// Nothing changes without a stop loss.
+void HbEnforceRewardRisk(const double stop_loss, double &take_profit, double &trailing_activation,
+                         const double trailing_delta)
+  {
+   if(g_hb_min_rr <= 0 || stop_loss <= 0)
+      return;
+   double min_reward = stop_loss * g_hb_min_rr;
+   if(take_profit > 0 && take_profit < min_reward)
+      take_profit = min_reward;
+   if(trailing_activation > 0 && trailing_delta > 0 && trailing_activation - trailing_delta < min_reward)
+      trailing_activation = min_reward + trailing_delta;
+  }
+
 //+------------------------------------------------------------------+
 //| Globals shared by every executor                                 |
 //+------------------------------------------------------------------+

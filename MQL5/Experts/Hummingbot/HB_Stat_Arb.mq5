@@ -32,7 +32,7 @@ input int             InpMaxOrdersFilledPerSide = 2;      // Max filled executor
 input group "Risk"
 input double          InpTakeProfit = 0.0008; // Take profit per order (0.0008 = 0.08%)
 input double          InpTpGlobal   = 0.01;   // Close the pair at this total profit (1%)
-input double          InpSlGlobal   = 0.05;   // Close the pair at this total loss (5%)
+input double          InpSlGlobal   = 0.005;  // Close the pair at this total loss (0.5%)
 
 class CStatArbController : public CHbController
   {
@@ -246,7 +246,9 @@ protected:
       m_filter = m_imbalance_pct > InpMaxPositionDeviation ? 1 : (m_imbalance_pct < -InpMaxPositionDeviation ? 2 : 0);
 
       // global take profit / stop loss on the held pair
-      if(m_pair_pnl_pct > HbTuneDist(InpTpGlobal) || m_pair_pnl_pct < -HbTuneDist(InpSlGlobal))
+      double sl_global = HbTuneDist(InpSlGlobal), tp_global = HbTuneDist(InpTpGlobal), unused = 0;
+      HbEnforceRewardRisk(sl_global, tp_global, unused, 0);
+      if(m_pair_pnl_pct > tp_global || m_pair_pnl_pct < -sl_global)
         {
          HbLog(StringFormat("pair pnl %.3f%% hit the global target, closing held positions", m_pair_pnl_pct * 100.0));
          CloseHeld(m_dom, 0, owned);

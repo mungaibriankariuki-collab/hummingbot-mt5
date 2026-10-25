@@ -10,6 +10,8 @@ input long   InpMagic          = HB_DEFAULT_MAGIC; // Magic number (unique per c
 input int    InpDeviation      = 10;               // Max slippage for market orders (points)
 input bool   InpCancelOnRemove = true;             // Cancel pending orders when the EA is removed
 input bool   InpVerbose        = true;             // Log executor activity to the Experts tab
+input group "Risk to reward"
+input double InpMinRewardRisk  = 2.0;              // Min reward:risk, take profit >= this x stop loss (0 = off)
 input group "Symbol auto-tune"
 input bool   InpAutoTune       = true;             // Scale % settings to this symbol's volatility
 input double InpTuneRefRange   = 0.05;             // Daily range the settings are written for (0.05 = 5%, Hummingbot crypto)
@@ -19,6 +21,7 @@ input double InpTuneMinSpreads = 3.0;              // Keep take profits, stops a
 
 void HbAutoTune(const string sym, const string sym2 = "")
   {
+   g_hb_min_rr = InpMinRewardRisk;
    HbAutoTuneInit(InpAutoTune, InpTuneRefRange, InpTuneMinSpreads, sym, sym2);
   }
 

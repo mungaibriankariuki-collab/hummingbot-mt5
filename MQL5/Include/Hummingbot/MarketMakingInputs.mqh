@@ -20,7 +20,7 @@ input string             InpSellAmountsPct      = "";   // Sell amount weights (
 input int                InpExecutorRefreshTime = 300;  // Refresh unfilled orders after (seconds)
 input int                InpCooldownTime        = 15;   // Level cooldown after a stop loss (seconds)
 input group "Triple barrier (fractions: 0.02 = 2%)"
-input double             InpStopLoss            = 0.03; // Stop loss (0 = off)
+input double             InpStopLoss            = 0.01; // Stop loss (0 = off)
 input double             InpTakeProfit          = 0.02; // Take profit (0 = off)
 input int                InpTimeLimit           = 2700; // Time limit in seconds (0 = off)
 input ENUM_HB_ORDER_TYPE InpTakeProfitOrderType = HB_ORDER_LIMIT; // Take profit order type

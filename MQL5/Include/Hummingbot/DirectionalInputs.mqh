@@ -16,7 +16,7 @@ input double             InpTotalLots           = 0.1;  // Total lots (total_amo
 input int                InpMaxExecutorsPerSide = 2;    // Max executors per side
 input int                InpCooldownTime        = 300;  // Cooldown between executors on one side (seconds)
 input group "Triple barrier (fractions: 0.02 = 2%)"
-input double             InpStopLoss            = 0.03; // Stop loss (0 = off)
+input double             InpStopLoss            = 0.01; // Stop loss (0 = off)
 input double             InpTakeProfit          = 0.02; // Take profit (0 = off)
 input int                InpTimeLimit           = 2700; // Time limit in seconds (0 = off)
 input ENUM_HB_ORDER_TYPE InpTakeProfitOrderType = HB_ORDER_LIMIT; // Take profit order type
