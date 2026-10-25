@@ -1,0 +1,77 @@
+name: Compile EAs
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compile:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MetaTrader 5 (MetaEditor)
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe" -OutFile mt5setup.exe
+          Start-Process -FilePath .\mt5setup.exe -ArgumentList "/auto"
+          $editor = "C:\Program Files\MetaTrader 5\metaeditor64.exe"
+          for ($i = 0; $i -lt 180 -and -not (Test-Path $editor); $i++) { Start-Sleep -Seconds 5 }
+          if (-not (Test-Path $editor)) { throw "MetaEditor was not installed" }
+          # let the installer finish unpacking, then stop the terminal it launches
+          Start-Sleep -Seconds 60
+          Get-Process terminal64, mt5setup -ErrorAction SilentlyContinue | Stop-Process -Force
+          Get-ChildItem "C:\Program Files\MetaTrader 5" | Select-Object Name
+
+      - name: Assemble MQL5 tree
+        shell: pwsh
+        run: |
+          $roots = @("C:\Program Files\MetaTrader 5", "$env:APPDATA\MetaQuotes")
+          $trade = Get-ChildItem -Path $roots -Recurse -Filter Trade.mqh -ErrorAction SilentlyContinue |
+                   Where-Object { $_.Directory.Name -eq "Trade" } | Select-Object -First 1
+          if (-not $trade) { throw "MQL5 standard library (Trade\Trade.mqh) not found" }
+          $stdInclude = $trade.Directory.Parent.FullName
+          Write-Host "Standard library: $stdInclude"
+          robocopy $stdInclude build\MQL5\Include /E /NFL /NDL /NJH /NJS | Out-Null
+          robocopy MQL5 build\MQL5 /E /NFL /NDL /NJH /NJS | Out-Null
+          $global:LASTEXITCODE = 0
+
+      - name: Compile
+        shell: pwsh
+        run: |
+          $editor = "C:\Program Files\MetaTrader 5\metaeditor64.exe"
+          $inc = (Resolve-Path build\MQL5).Path
+          $failed = @()
+          foreach ($src in Get-ChildItem build\MQL5\Experts\Hummingbot\*.mq5) {
+            $log = [IO.Path]::ChangeExtension($src.FullName, ".log")
+            Start-Process -FilePath $editor -Wait -NoNewWindow -ArgumentList @("/compile:`"$($src.FullName)`"", "/inc:`"$inc`"", "/log:`"$log`"")
+            $text = if (Test-Path $log) { Get-Content $log -Encoding Unicode -Raw } else { "no log" }
+            $ex5 = [IO.Path]::ChangeExtension($src.FullName, ".ex5")
+            Write-Host "===== $($src.Name)"
+            $text -split "`r?`n" | Where-Object { $_ -match "error|warning|result" } | ForEach-Object { Write-Host $_ }
+            if (-not (Test-Path $ex5) -or $text -match "[1-9]\d* errors?") { $failed += $src.Name }
+          }
+          if ($failed.Count -gt 0) { throw "Compilation failed: $($failed -join ', ')" }
+          New-Item -ItemType Directory -Force dist\MQL5\Experts\Hummingbot, dist\MQL5\Include | Out-Null
+          Copy-Item build\MQL5\Experts\Hummingbot\*.ex5, build\MQL5\Experts\Hummingbot\*.mq5 dist\MQL5\Experts\Hummingbot\
+          Copy-Item -Recurse MQL5\Include\Hummingbot dist\MQL5\Include\
+          Copy-Item README.md, LICENSE, NOTICE dist\
+          Compress-Archive -Path dist\* -DestinationPath hummingbot-mt5.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hummingbot-mt5
+          path: dist/
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: gh release create "${{ github.ref_name }}" hummingbot-mt5.zip --title "${{ github.ref_name }}" --notes "Compiled EAs (.ex5) and sources. Copy the MQL5 folder into your terminal's data folder."

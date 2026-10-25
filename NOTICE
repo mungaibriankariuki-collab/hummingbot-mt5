@@ -1,0 +1,9 @@
+Hummingbot MT5
+Copyright 2026 mungaibriankariuki-collab
+
+This product is a port to MQL5 of strategies, controllers and executors from
+Hummingbot (https://github.com/hummingbot/hummingbot), commit
+9af100d6822da7d2d0291a906c730ef172284ee2, which is licensed under the
+Apache License, Version 2.0. Copyright Hummingbot Foundation and contributors.
+
+The code was rewritten in MQL5; no Python source is included.
