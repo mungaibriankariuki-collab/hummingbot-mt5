@@ -5,7 +5,7 @@
 #property copyright   "Hummingbot strategies ported to MQL5 - Apache-2.0"
 #property version     "1.00"
 #property description "Dynamic market making (Hummingbot pmm_dynamic): MACD shifts the reference price and NATR scales the spreads."
-#property description "Spreads are multiples of NATR, e.g. 1,2,4 = 1x, 2x and 4x the normalised ATR."
+#property description "Spreads are multiples of NATR, e.g. 1,2,4 = 1x, 2x and 4x the normalised ATR, so auto-tune leaves them as entered."
 
 #define HB_DEFAULT_MAGIC 710202
 #define HB_DEF_BUY_SPREADS "1,2,4"
@@ -79,11 +79,13 @@ int OnInit()
       return INIT_FAILED;
    if(InpMACDFast < 1 || InpMACDSlow <= InpMACDFast || InpMACDSignal < 1 || InpNATRLength < 1)
       return INIT_PARAMETERS_INCORRECT;
+   HbAutoTune(_Symbol);
    g_ctrl.SetIdentity("pmm_dynamic", _Symbol);
    if(InpTotalLots <= 0 ||
       !g_ctrl.ConfigureMarketMaking(InpBuySpreads, InpSellSpreads, InpBuyAmountsPct, InpSellAmountsPct, InpTotalLots,
-                                    InpExecutorRefreshTime, InpCooldownTime, InpStopLoss, InpTakeProfit, InpTimeLimit,
-                                    InpTakeProfitOrderType, InpTrailingActivation, InpTrailingDelta))
+                                    InpExecutorRefreshTime, InpCooldownTime, HbTuneDist(InpStopLoss),
+                                    HbTuneDist(InpTakeProfit), InpTimeLimit, InpTakeProfitOrderType,
+                                    HbTuneDist(InpTrailingActivation), HbTuneDist(InpTrailingDelta)))
       return INIT_PARAMETERS_INCORRECT;
    g_ctrl.Load();
    EventSetTimer(1);

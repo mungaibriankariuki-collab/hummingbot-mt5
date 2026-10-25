@@ -205,7 +205,7 @@ protected:
       double mid = HbMid(sym);
       double ref_min = min_price > 0 ? min_price : mid;
       double ref_max = max_price > 0 ? max_price : mid;
-      double price = side == HB_BUY ? ref_min * (1.0 - InpQuoterSpread) : ref_max * (1.0 + InpQuoterSpread);
+      double price = side == HB_BUY ? ref_min * (1.0 - HbTune(InpQuoterSpread)) : ref_max * (1.0 + HbTune(InpQuoterSpread));
       double notional = HbLotNotional(sym, mid);
       if(notional <= 0)
          return;
@@ -246,7 +246,7 @@ protected:
       m_filter = m_imbalance_pct > InpMaxPositionDeviation ? 1 : (m_imbalance_pct < -InpMaxPositionDeviation ? 2 : 0);
 
       // global take profit / stop loss on the held pair
-      if(m_pair_pnl_pct > InpTpGlobal || m_pair_pnl_pct < -InpSlGlobal)
+      if(m_pair_pnl_pct > HbTuneDist(InpTpGlobal) || m_pair_pnl_pct < -HbTuneDist(InpSlGlobal))
         {
          HbLog(StringFormat("pair pnl %.3f%% hit the global target, closing held positions", m_pair_pnl_pct * 100.0));
          CloseHeld(m_dom, 0, owned);
@@ -296,9 +296,10 @@ public:
       m_hedge = hedge;
       if(!SymbolSelect(m_dom, true) || !SymbolSelect(m_hedge, true))
          return false;
+      HbAutoTune(m_dom, m_hedge);
       m_theo_dom = InpTotalAmount * (1.0 / (1.0 + InpPosHedgeRatio));
       m_theo_hedge = InpTotalAmount * (InpPosHedgeRatio / (1.0 + InpPosHedgeRatio));
-      m_tb.take_profit = InpTakeProfit;
+      m_tb.take_profit = HbTuneDist(InpTakeProfit);
       m_tb.open_order_type = HB_ORDER_LIMIT_MAKER;
       m_tb.take_profit_order_type = HB_ORDER_LIMIT_MAKER;
       return true;

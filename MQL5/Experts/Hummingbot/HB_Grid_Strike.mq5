@@ -18,7 +18,7 @@ input ENUM_HB_SIDE InpSide         = HB_BUY; // Grid side
 input double       InpStartPrice   = 0.0;    // Start (bottom) price, 0 = auto
 input double       InpEndPrice     = 0.0;    // End (top) price, 0 = auto
 input double       InpLimitPrice   = 0.0;    // Limit (stop-out) price beyond the losing edge, 0 = auto
-input double       InpAutoRangePct = 0.02;   // Auto range: +/- this fraction around the mid price
+input double       InpAutoRangePct = 0.02;   // Auto range: +/- this fraction around the mid price (auto-tuned)
 
 class CGridStrikeController : public CHbController
   {
@@ -36,13 +36,14 @@ protected:
       double mid = HbMid(m_symbol);
       if(mid <= 0)
          return;
-      m_start = InpStartPrice > 0 ? InpStartPrice : HbNormPrice(m_symbol, mid * (1.0 - InpAutoRangePct));
-      m_end = InpEndPrice > 0 ? InpEndPrice : HbNormPrice(m_symbol, mid * (1.0 + InpAutoRangePct));
+      double range = HbTune(InpAutoRangePct);
+      m_start = InpStartPrice > 0 ? InpStartPrice : HbNormPrice(m_symbol, mid * (1.0 - range));
+      m_end = InpEndPrice > 0 ? InpEndPrice : HbNormPrice(m_symbol, mid * (1.0 + range));
       if(InpLimitPrice > 0)
          m_limit = InpLimitPrice;
       else
-         m_limit = InpSide == HB_BUY ? HbNormPrice(m_symbol, m_start * (1.0 - InpAutoRangePct / 2.0))
-                                     : HbNormPrice(m_symbol, m_end * (1.0 + InpAutoRangePct / 2.0));
+         m_limit = InpSide == HB_BUY ? HbNormPrice(m_symbol, m_start * (1.0 - range / 2.0))
+                                     : HbNormPrice(m_symbol, m_end * (1.0 + range / 2.0));
       HbLog(StringFormat("grid range %s - %s, limit %s", DoubleToString(m_start, _Digits),
                          DoubleToString(m_end, _Digits), DoubleToString(m_limit, _Digits)));
      }
@@ -54,8 +55,8 @@ protected:
       if(CountActive() == 0 && InsideBounds(HbMid(m_symbol)))
         {
          CHbGridExecutor *e = new CHbGridExecutor();
-         e.Setup(m_symbol, InpSide, m_start, m_end, m_limit, InpTotalLots, InpMinOrderLots, InpMinSpreadBetweenOrders,
-                 InpMaxOpenOrders, InpMaxOrdersPerBatch, InpOrderFrequency, InpActivationBounds, m_tb,
+         e.Setup(m_symbol, InpSide, m_start, m_end, m_limit, InpTotalLots, InpMinOrderLots, HbTuneDist(InpMinSpreadBetweenOrders),
+                 InpMaxOpenOrders, InpMaxOrdersPerBatch, InpOrderFrequency, HbTune(InpActivationBounds), m_tb,
                  InpKeepPosition, "grid");
          AddExecutor(e);
         }
@@ -107,6 +108,7 @@ int OnInit()
    if(InpTotalLots <= 0 || InpMinSpreadBetweenOrders <= 0 || InpMaxOpenOrders < 1 ||
       (InpStartPrice > 0 && InpEndPrice > 0 && InpEndPrice <= InpStartPrice))
       return INIT_PARAMETERS_INCORRECT;
+   HbAutoTune(_Symbol);
    g_ctrl.SetIdentity("grid_strike", _Symbol);
    g_ctrl.Configure();
    g_ctrl.Load();

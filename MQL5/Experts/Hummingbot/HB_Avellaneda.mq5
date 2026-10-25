@@ -201,7 +201,7 @@ protected:
       double time_left_fraction = 1.0; // infinite timespan
       m_reservation = price - m_q * gamma * m_vol * time_left_fraction;
       m_optimal_spread = gamma * m_vol * time_left_fraction + 2.0 * MathLog(1.0 + gamma / m_kappa) / gamma;
-      double min_spread = price / 100.0 * InpMinSpread;
+      double min_spread = price / 100.0 * HbTune(InpMinSpread);
       m_optimal_ask = MathMax(m_reservation + m_optimal_spread / 2.0, price + min_spread / 2.0);
       m_optimal_bid = MathMin(m_reservation - m_optimal_spread / 2.0, price - min_spread / 2.0);
       return m_optimal_bid > 0 && m_optimal_ask > 0;
@@ -378,6 +378,7 @@ int OnInit()
    if(InpOrderAmount <= 0 || InpInventoryLots <= 0 || InpRiskFactor <= 0 || InpOrderRefreshTime < 1 ||
       InpVolatilityBufferSize < 2 || InpInventoryTargetBasePct < 0 || InpInventoryTargetBasePct > 100)
       return INIT_PARAMETERS_INCORRECT;
+   HbAutoTune(_Symbol);
    g_ctrl.SetIdentity("avellaneda", _Symbol);
    g_ctrl.Reset();
    EventSetTimer(1);

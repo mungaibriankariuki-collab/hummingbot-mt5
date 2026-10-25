@@ -36,10 +36,11 @@ protected:
       if(!HbValid(trend[last]) || close[last] == 0)
          return;
       double distance = MathAbs(close[last] - trend[last]) / close[last];
-      if(dir[last] == 1 && distance < InpPercentageThreshold)
+      double threshold = HbTune(InpPercentageThreshold);
+      if(dir[last] == 1 && distance < threshold)
          m_signal = 1;
       else
-         if(dir[last] == -1 && distance < InpPercentageThreshold)
+         if(dir[last] == -1 && distance < threshold)
             m_signal = -1;
       m_signal_info = StringFormat("| direction %d distance %.3f%%", (int)dir[last], distance * 100.0);
      }
@@ -56,8 +57,10 @@ int OnInit()
    if(InpLength < 2 || InpMultiplier <= 0 || InpTotalLots <= 0)
       return INIT_PARAMETERS_INCORRECT;
    g_ctrl.SetIdentity("supertrend_v1", _Symbol);
-   g_ctrl.ConfigureDirectional(InpTotalLots, InpMaxExecutorsPerSide, InpCooldownTime, InpStopLoss, InpTakeProfit,
-                               InpTimeLimit, InpTakeProfitOrderType, InpTrailingActivation, InpTrailingDelta);
+   HbAutoTune(_Symbol);
+   g_ctrl.ConfigureDirectional(InpTotalLots, InpMaxExecutorsPerSide, InpCooldownTime, HbTuneDist(InpStopLoss),
+                               HbTuneDist(InpTakeProfit), InpTimeLimit, InpTakeProfitOrderType,
+                               HbTuneDist(InpTrailingActivation), HbTuneDist(InpTrailingDelta));
    g_ctrl.Load();
    EventSetTimer(1);
    return INIT_SUCCEEDED;

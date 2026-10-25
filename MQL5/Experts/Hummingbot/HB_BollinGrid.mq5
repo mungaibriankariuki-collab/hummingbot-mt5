@@ -77,7 +77,7 @@ protected:
       HbTripleBarrier tb = m_tb;
       tb.open_order_type = InpGridOpenOrderType;
       CHbGridExecutor *e = new CHbGridExecutor();
-      e.Setup(m_symbol, side, start, end, limit, lots, InpMinOrderLots, InpMinSpreadBetweenOrders, InpMaxOpenOrders,
+      e.Setup(m_symbol, side, start, end, limit, lots, InpMinOrderLots, HbTuneDist(InpMinSpreadBetweenOrders), InpMaxOpenOrders,
               InpMaxOrdersPerBatch, InpOrderFrequency, 0.0, tb, false, "bollingrid");
       return e;
      }
@@ -97,8 +97,10 @@ int OnInit()
    if(InpBBLength < 2 || InpTotalLots <= 0 || InpMinSpreadBetweenOrders <= 0)
       return INIT_PARAMETERS_INCORRECT;
    g_ctrl.SetIdentity("bollingrid", _Symbol);
-   g_ctrl.ConfigureDirectional(InpTotalLots, InpMaxExecutorsPerSide, InpCooldownTime, InpStopLoss, InpTakeProfit,
-                               InpTimeLimit, InpTakeProfitOrderType, InpTrailingActivation, InpTrailingDelta);
+   HbAutoTune(_Symbol);
+   g_ctrl.ConfigureDirectional(InpTotalLots, InpMaxExecutorsPerSide, InpCooldownTime, HbTuneDist(InpStopLoss),
+                               HbTuneDist(InpTakeProfit), InpTimeLimit, InpTakeProfitOrderType,
+                               HbTuneDist(InpTrailingActivation), HbTuneDist(InpTrailingDelta));
    g_ctrl.Load();
    EventSetTimer(1);
    return INIT_SUCCEEDED;

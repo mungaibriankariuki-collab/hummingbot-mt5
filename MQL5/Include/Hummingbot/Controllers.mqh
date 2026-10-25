@@ -51,6 +51,8 @@ protected:
       if(HbIsTester() && !MQLInfoInteger(MQL_VISUAL_MODE))
          return;
       string s = StringFormat("Hummingbot %s | %s | magic %I64d\n", m_name, m_symbol, g_hb_magic);
+      if(StringLen(g_hb_tune_info) > 0)
+         s += g_hb_tune_info + "\n";
       string header = StatusHeader();
       if(StringLen(header) > 0)
          s += header + "\n";

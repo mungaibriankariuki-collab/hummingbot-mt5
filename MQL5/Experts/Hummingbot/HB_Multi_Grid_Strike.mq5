@@ -86,8 +86,8 @@ protected:
             continue;
          CHbGridExecutor *ex = new CHbGridExecutor();
          ex.Setup(m_symbol, m_grids[g].side, m_grids[g].start, m_grids[g].end, m_grids[g].limit,
-                  InpTotalLots * m_grids[g].pct, InpMinOrderLots, InpMinSpreadBetweenOrders, InpMaxOpenOrders,
-                  InpMaxOrdersPerBatch, InpOrderFrequency, InpActivationBounds, m_tb, InpKeepPosition, m_grids[g].id);
+                  InpTotalLots * m_grids[g].pct, InpMinOrderLots, HbTuneDist(InpMinSpreadBetweenOrders), InpMaxOpenOrders,
+                  InpMaxOrdersPerBatch, InpOrderFrequency, HbTune(InpActivationBounds), m_tb, InpKeepPosition, m_grids[g].id);
          AddExecutor(ex);
         }
      }
@@ -126,6 +126,7 @@ int OnInit()
       return INIT_FAILED;
    if(InpTotalLots <= 0 || InpMinSpreadBetweenOrders <= 0 || InpMaxOpenOrders < 1)
       return INIT_PARAMETERS_INCORRECT;
+   HbAutoTune(_Symbol);
    g_ctrl.SetIdentity("multi_grid_strike", _Symbol);
    g_ctrl.Configure();
    g_ctrl.Load();

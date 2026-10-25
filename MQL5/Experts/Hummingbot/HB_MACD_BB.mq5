@@ -63,8 +63,10 @@ int OnInit()
    if(InpBBLength < 2 || InpMACDFast < 1 || InpMACDSlow <= InpMACDFast || InpMACDSignal < 1 || InpTotalLots <= 0)
       return INIT_PARAMETERS_INCORRECT;
    g_ctrl.SetIdentity("macd_bb_v1", _Symbol);
-   g_ctrl.ConfigureDirectional(InpTotalLots, InpMaxExecutorsPerSide, InpCooldownTime, InpStopLoss, InpTakeProfit,
-                               InpTimeLimit, InpTakeProfitOrderType, InpTrailingActivation, InpTrailingDelta);
+   HbAutoTune(_Symbol);
+   g_ctrl.ConfigureDirectional(InpTotalLots, InpMaxExecutorsPerSide, InpCooldownTime, HbTuneDist(InpStopLoss),
+                               HbTuneDist(InpTakeProfit), InpTimeLimit, InpTakeProfitOrderType,
+                               HbTuneDist(InpTrailingActivation), HbTuneDist(InpTrailingDelta));
    g_ctrl.Load();
    EventSetTimer(1);
    return INIT_SUCCEEDED;

@@ -24,11 +24,13 @@ int OnInit()
    HbInit("PMM-Simple", InpMagic, InpDeviation);
    if(!HbCheckAccount())
       return INIT_FAILED;
+   HbAutoTune(_Symbol);
    g_ctrl.SetIdentity("pmm_simple", _Symbol);
    if(InpTotalLots <= 0 ||
-      !g_ctrl.ConfigureMarketMaking(InpBuySpreads, InpSellSpreads, InpBuyAmountsPct, InpSellAmountsPct, InpTotalLots,
-                                    InpExecutorRefreshTime, InpCooldownTime, InpStopLoss, InpTakeProfit, InpTimeLimit,
-                                    InpTakeProfitOrderType, InpTrailingActivation, InpTrailingDelta))
+      !g_ctrl.ConfigureMarketMaking(HbTuneList(InpBuySpreads, true), HbTuneList(InpSellSpreads, true), InpBuyAmountsPct, InpSellAmountsPct, InpTotalLots,
+                                    InpExecutorRefreshTime, InpCooldownTime, HbTuneDist(InpStopLoss),
+                                    HbTuneDist(InpTakeProfit), InpTimeLimit, InpTakeProfitOrderType,
+                                    HbTuneDist(InpTrailingActivation), HbTuneDist(InpTrailingDelta)))
       return INIT_PARAMETERS_INCORRECT;
    g_ctrl.Load();
    EventSetTimer(1);

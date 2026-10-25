@@ -83,7 +83,7 @@ protected:
          delta *= mult;
         }
       CHbDCAExecutor *e = new CHbDCAExecutor();
-      e.Setup(m_symbol, side, prices, level_lots, 0.0, sl, act, delta, m_tb.time_limit, InpActivationBounds, "dman_v3");
+      e.Setup(m_symbol, side, prices, level_lots, 0.0, sl, act, delta, m_tb.time_limit, HbTune(InpActivationBounds), "dman_v3");
       return e;
      }
 
@@ -91,7 +91,8 @@ public:
    bool              ConfigureDCA(void)
      {
       m_bb_width = 0;
-      int n = HbParseList(InpDCASpreads, m_spreads);
+      // dynamic spreads already follow the Bollinger width
+      int n = HbParseList(InpDynamicOrderSpread ? InpDCASpreads : HbTuneList(InpDCASpreads, false), m_spreads);
       if(n == 0)
          return false;
       if(HbParseList(InpDCAAmountsPct, m_weights) == 0)
@@ -114,8 +115,13 @@ int OnInit()
    if(InpBBLength < 2 || InpTotalLots <= 0)
       return INIT_PARAMETERS_INCORRECT;
    g_ctrl.SetIdentity("dman_v3", _Symbol);
-   g_ctrl.ConfigureDirectional(InpTotalLots, InpMaxExecutorsPerSide, InpCooldownTime, InpStopLoss, InpTakeProfit,
-                               InpTimeLimit, InpTakeProfitOrderType, InpTrailingActivation, InpTrailingDelta);
+   HbAutoTune(_Symbol);
+   // with dynamic targets the Bollinger width already scales the stops to the symbol
+   double sl = InpDynamicTarget ? InpStopLoss : HbTuneDist(InpStopLoss);
+   double act = InpDynamicTarget ? InpTrailingActivation : HbTuneDist(InpTrailingActivation);
+   double delta = InpDynamicTarget ? InpTrailingDelta : HbTuneDist(InpTrailingDelta);
+   g_ctrl.ConfigureDirectional(InpTotalLots, InpMaxExecutorsPerSide, InpCooldownTime, sl, HbTuneDist(InpTakeProfit),
+                               InpTimeLimit, InpTakeProfitOrderType, act, delta);
    if(!g_ctrl.ConfigureDCA())
      {
       Print("DCA spreads and amounts must be non-empty lists of the same length");

@@ -25,11 +25,11 @@ input ENUM_HB_ORDER_TYPE InpTakeProfitOrderType = HB_ORDER_LIMIT_MAKER; // Level
 void HbGridBarrier(HbTripleBarrier &tb)
   {
    tb.Init();
-   tb.take_profit = InpTakeProfit;
-   tb.stop_loss = InpStopLoss;
+   tb.take_profit = HbTuneDist(InpTakeProfit);
+   tb.stop_loss = HbTuneDist(InpStopLoss);
    tb.time_limit = InpTimeLimit;
-   tb.trailing_activation = InpTrailingActivation;
-   tb.trailing_delta = InpTrailingDelta;
+   tb.trailing_activation = HbTuneDist(InpTrailingActivation);
+   tb.trailing_delta = HbTuneDist(InpTrailingDelta);
    tb.open_order_type = InpOpenOrderType;
    tb.take_profit_order_type = InpTakeProfitOrderType;
   }

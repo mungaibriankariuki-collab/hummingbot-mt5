@@ -32,7 +32,45 @@ All of them run on the same engine in `MQL5/Include/Hummingbot`:
 - **Controllers**: the directional and market-making controller bases, with max executors per side, cooldowns,
   level refreshes and stop-loss cooldowns.
 
-Default inputs match Hummingbot's defaults.
+Default inputs match Hummingbot's defaults, and auto-tune fits them to whatever symbol the EA runs on.
+
+## Auto-tune for every symbol
+
+Hummingbot's defaults (2–3% stops, 1–2% spreads) were written for crypto pairs that move about 5% a day. On a
+forex pair that moves 0.6% a day they would almost never trigger. Every EA therefore measures its symbol when it
+starts and scales the percentage settings to it, so the same defaults work on any forex pair, metal, index, crypto
+CFD or synthetic index without a per-symbol preset.
+
+1. It measures the symbol's average daily range: the 14-day ATR as a fraction of price. If daily history isn't
+   available it uses H4, H1 or M15 bars and scales them to a day.
+2. Factor = daily range ÷ `Daily range the settings are written for` (default 0.05, Hummingbot's crypto). The factor
+   is kept between 0.02 and 3.
+3. Stop losses, take profits, trailing stops, market-making spreads, DCA spreads, grid spacing, auto grid ranges,
+   activation bounds and the SuperTrend distance are multiplied by the factor.
+4. Take profits, stops, quotes and grid spacing are kept at least `Keep ... this many spreads away` (default 3)
+   bid/ask spreads from the price, so a trade can't close inside the spread.
+
+The factor and the measurements appear on the chart and in the Experts log, e.g.
+`auto-tune x0.118 | EURUSD daily range 0.590% (D1), spread 0.0010% | min target 0.0030%`.
+
+Rough effect on `HB_PMM_Simple` (stop loss / take profit / first spread) with typical daily ranges:
+
+| Symbol | Daily range | Factor | Stop loss | Take profit | Spread |
+|---|---|---|---|---|---|
+| Hummingbot crypto | 5% | 1.00 | 3% | 2% | 1% |
+| BTCUSD | ~3% | ~0.60 | 1.8% | 1.2% | 0.6% |
+| XAUUSD | ~1.5% | ~0.30 | 0.9% | 0.6% | 0.3% |
+| NAS100 | ~1.3% | ~0.26 | 0.78% | 0.52% | 0.26% |
+| EURUSD | ~0.6% | ~0.12 | 0.36% | 0.24% | 0.12% |
+
+The real numbers come from your broker's prices at start-up. What is not scaled: lot sizes, time limits, cooldowns,
+indicator lengths and thresholds (%B, z-score), and settings that already follow volatility (PMM Dynamic's NATR
+spreads, DMan V3's dynamic spreads and targets, BollinGrid's Bollinger-width grid, Avellaneda's model). Manual grid
+prices in Multi Grid Strike are used as entered.
+
+Inputs you type are read in the same crypto terms and scaled too. To use exact values, set
+`Scale % settings to this symbol's volatility` to false. Executors that are already running keep the settings they
+started with.
 
 ## Install
 
@@ -95,9 +133,10 @@ These Hummingbot strategies depend on crypto infrastructure that MT5 doesn't hav
 
 ## Risk
 
-These EAs trade real money. Market making and grids lose money in strong trends. The Hummingbot defaults (2–3%
-stops, 1–2% spreads) were made for volatile crypto pairs and are wide for most forex symbols. Run every EA in the
-Strategy Tester and on a demo account before going live.
+These EAs trade real money. Market making and grids lose money in strong trends. Auto-tune sizes the distances to
+each symbol, but it doesn't make a strategy profitable on it, and `Total lots` is not scaled: 0.1 lots of an index
+or gold carries far more risk than 0.1 lots of EURUSD. Run every EA in the Strategy Tester and on a demo account
+before going live.
 
 ## License
 

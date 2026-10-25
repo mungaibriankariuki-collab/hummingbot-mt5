@@ -38,7 +38,7 @@ protected:
         }
       CHbDCAExecutor *e = new CHbDCAExecutor();
       e.Setup(m_symbol, side, prices, level_lots, m_tb.take_profit, m_tb.stop_loss, m_tb.trailing_activation,
-              m_tb.trailing_delta, m_tb.time_limit, InpExecutorActivationBounds, level_id);
+              m_tb.trailing_delta, m_tb.time_limit, HbTune(InpExecutorActivationBounds), level_id);
       return e;
      }
    virtual bool      RefreshCondition(CHbExecutor *e)
@@ -56,7 +56,7 @@ protected:
 public:
    bool              ConfigureDCA(void)
      {
-      int n = HbParseList(InpDCASpreads, m_dca_spreads);
+      int n = HbParseList(HbTuneList(InpDCASpreads, false), m_dca_spreads);
       double amounts[];
       int m = HbParseList(InpDCAAmounts, amounts);
       if(n == 0)
@@ -89,11 +89,13 @@ int OnInit()
    HbInit("DMan-Maker-V2", InpMagic, InpDeviation);
    if(!HbCheckAccount())
       return INIT_FAILED;
+   HbAutoTune(_Symbol);
    g_ctrl.SetIdentity("dman_maker_v2", _Symbol);
    if(InpTotalLots <= 0 ||
-      !g_ctrl.ConfigureMarketMaking(InpBuySpreads, InpSellSpreads, InpBuyAmountsPct, InpSellAmountsPct, InpTotalLots,
-                                    InpExecutorRefreshTime, InpCooldownTime, InpStopLoss, InpTakeProfit, InpTimeLimit,
-                                    InpTakeProfitOrderType, InpTrailingActivation, InpTrailingDelta))
+      !g_ctrl.ConfigureMarketMaking(HbTuneList(InpBuySpreads, true), HbTuneList(InpSellSpreads, true), InpBuyAmountsPct, InpSellAmountsPct, InpTotalLots,
+                                    InpExecutorRefreshTime, InpCooldownTime, HbTuneDist(InpStopLoss),
+                                    HbTuneDist(InpTakeProfit), InpTimeLimit, InpTakeProfitOrderType,
+                                    HbTuneDist(InpTrailingActivation), HbTuneDist(InpTrailingDelta)))
       return INIT_PARAMETERS_INCORRECT;
    if(!g_ctrl.ConfigureDCA())
      {
