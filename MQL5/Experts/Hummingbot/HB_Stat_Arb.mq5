@@ -150,7 +150,7 @@ protected:
             continue;
          int s = PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY ? 1 : -1;
          if(side == 0 || s == side)
-            g_hb_trade.PositionClose(t);
+            HbClosePositionByTicket(t);
         }
      }
    void              ExecutorStats(const string sym, int &placed, int &filled, double &min_price, double &max_price,

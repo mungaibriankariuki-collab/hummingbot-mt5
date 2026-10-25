@@ -330,6 +330,7 @@ ulong HbPlaceOpen(const string sym, const ENUM_HB_SIDE side, ENUM_HB_ORDER_TYPE 
    double vol = HbNormLots(sym, lots);
    if(vol <= 0)
       return 0;
+   g_hb_trade.SetTypeFillingBySymbol(sym);
    double bid = HbBid(sym), ask = HbAsk(sym);
    double dist = HbStopsDistance(sym) + HbTickSize(sym);
    if(type != HB_ORDER_MARKET)
@@ -387,6 +388,7 @@ bool HbClosePositionByTicket(const ulong ticket)
   {
    if(ticket == 0 || !PositionSelectByTicket(ticket))
       return true;
+   g_hb_trade.SetTypeFillingBySymbol(PositionGetString(POSITION_SYMBOL));
    return g_hb_trade.PositionClose(ticket);
   }
 

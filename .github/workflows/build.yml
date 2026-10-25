@@ -20,14 +20,18 @@ jobs:
         shell: pwsh
         run: |
           Invoke-WebRequest -Uri "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe" -OutFile mt5setup.exe
-          Start-Process -FilePath .\mt5setup.exe -ArgumentList "/auto"
-          $editor = "C:\Program Files\MetaTrader 5\metaeditor64.exe"
-          for ($i = 0; $i -lt 180 -and -not (Test-Path $editor); $i++) { Start-Sleep -Seconds 5 }
-          if (-not (Test-Path $editor)) { throw "MetaEditor was not installed" }
-          # let the installer finish unpacking, then stop the terminal it launches
-          Start-Sleep -Seconds 60
-          Get-Process terminal64, mt5setup -ErrorAction SilentlyContinue | Stop-Process -Force
-          Get-ChildItem "C:\Program Files\MetaTrader 5" | Select-Object Name
+          $setup = Start-Process -FilePath .\mt5setup.exe -ArgumentList "/auto" -PassThru
+          $setup | Wait-Process -Timeout 900 -ErrorAction SilentlyContinue
+          $dir = "C:\Program Files\MetaTrader 5"
+          if (-not (Test-Path "$dir\metaeditor64.exe")) { throw "MetaEditor was not installed" }
+          Get-Process terminal64 -ErrorAction SilentlyContinue | Stop-Process -Force
+          # the terminal unpacks MQL5\ (standard library) on its first start; portable mode keeps it in the install dir
+          Start-Process -FilePath "$dir\terminal64.exe" -ArgumentList "/portable"
+          $trade = "$dir\MQL5\Include\Trade\Trade.mqh"
+          for ($i = 0; $i -lt 120 -and -not (Test-Path $trade); $i++) { Start-Sleep -Seconds 5 }
+          Start-Sleep -Seconds 15
+          Get-Process terminal64 -ErrorAction SilentlyContinue | Stop-Process -Force
+          Get-ChildItem $dir | Select-Object Name
 
       - name: Assemble MQL5 tree
         shell: pwsh
