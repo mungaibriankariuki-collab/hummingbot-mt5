@@ -87,7 +87,7 @@ public:
    datetime           CloseTimestamp(void) const { return m_close_timestamp; }
    double             RealizedPnl(void) const { return m_realized_pnl; }
 
-   virtual void       Save(const int h)
+   virtual void       SaveState(const int h)
      {
       HbWriteString(h, m_id);
       HbWriteString(h, m_symbol);
@@ -100,7 +100,7 @@ public:
       FileWriteDouble(h, m_realized_pnl);
       FileWriteInteger(h, m_keep_position ? 1 : 0);
      }
-   virtual bool       Load(const int h)
+   virtual bool       LoadState(const int h)
      {
       m_id = HbReadString(h);
       m_symbol = HbReadString(h);
@@ -333,9 +333,9 @@ public:
         }
      }
 
-   virtual void       Save(const int h)
+   virtual void       SaveState(const int h)
      {
-      CHbExecutor::Save(h);
+      CHbExecutor::SaveState(h);
       FileWriteDouble(h, m_entry_price);
       FileWriteDouble(h, m_lots);
       HbWriteBarrier(h, m_tb);
@@ -343,9 +343,9 @@ public:
       FileWriteInteger(h, m_trailing_on ? 1 : 0);
       FileWriteDouble(h, m_trailing_trigger);
      }
-   virtual bool       Load(const int h)
+   virtual bool       LoadState(const int h)
      {
-      if(!CHbExecutor::Load(h))
+      if(!CHbExecutor::LoadState(h))
          return false;
       m_entry_price = FileReadDouble(h);
       m_lots = FileReadDouble(h);
@@ -581,9 +581,9 @@ public:
         }
      }
 
-   virtual void       Save(const int h)
+   virtual void       SaveState(const int h)
      {
-      CHbExecutor::Save(h);
+      CHbExecutor::SaveState(h);
       HbWriteDoubles(h, m_prices);
       HbWriteDoubles(h, m_lots);
       HbWriteTickets(h, m_orders);
@@ -596,9 +596,9 @@ public:
       FileWriteInteger(h, m_trailing_on ? 1 : 0);
       FileWriteDouble(h, m_trailing_trigger);
      }
-   virtual bool       Load(const int h)
+   virtual bool       LoadState(const int h)
      {
-      if(!CHbExecutor::Load(h))
+      if(!CHbExecutor::LoadState(h))
          return false;
       HbReadDoubles(h, m_prices);
       HbReadDoubles(h, m_lots);
@@ -1027,9 +1027,9 @@ public:
       CancelFarOpenOrders();
      }
 
-   virtual void       Save(const int h)
+   virtual void       SaveState(const int h)
      {
-      CHbExecutor::Save(h);
+      CHbExecutor::SaveState(h);
       FileWriteDouble(h, m_start_price);
       FileWriteDouble(h, m_end_price);
       FileWriteDouble(h, m_limit_price);
@@ -1052,9 +1052,9 @@ public:
       FileWriteDouble(h, m_trailing_trigger);
       FileWriteInteger(h, m_completed_cycles);
      }
-   virtual bool       Load(const int h)
+   virtual bool       LoadState(const int h)
      {
-      if(!CHbExecutor::Load(h))
+      if(!CHbExecutor::LoadState(h))
          return false;
       m_start_price = FileReadDouble(h);
       m_end_price = FileReadDouble(h);

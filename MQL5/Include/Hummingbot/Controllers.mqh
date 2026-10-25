@@ -185,7 +185,7 @@ public:
          if(e == NULL || !e.IsActive())
             continue;
          FileWriteInteger(h, e.ExecType());
-         e.Save(h);
+         e.SaveState(h);
         }
       SaveExtra(h);
       FileClose(h);
@@ -215,7 +215,7 @@ public:
          CHbExecutor *e = HbNewExecutor(FileReadInteger(h));
          if(e == NULL)
             break;
-         if(!e.Load(h))
+         if(!e.LoadState(h))
            {
             delete e;
             break;
